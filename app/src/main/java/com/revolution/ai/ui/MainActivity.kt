@@ -1,10 +1,10 @@
 package com.revolution.ai.ui
 
-import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ApplicationInfo
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -21,6 +21,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
+import com.revolution.ai.data.model.AppPermissionEntry
+import com.revolution.ai.data.model.AssistantState
 import com.revolution.ai.service.VoiceAssistantService
 import com.revolution.ai.ui.screens.guide.GuideScreen
 import com.revolution.ai.ui.screens.home.HomeScreen
@@ -34,9 +36,10 @@ class MainActivity : ComponentActivity() {
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { /* Permissions handled; UI recomposes based on granted state */ }
+    ) { }
 
     private var serviceReceiver: BroadcastReceiver? = null
+    private var viewModelRef: MainViewModel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,22 +47,28 @@ class MainActivity : ComponentActivity() {
         requestAllPermissions()
 
         setContent {
-            val viewModel: MainViewModel = viewModel()
+            val vm: MainViewModel = viewModel()
 
-            val darkTheme by viewModel.isDarkTheme.collectAsState()
-            val appName by viewModel.appName.collectAsState()
-            val isAlwaysListening by viewModel.isAlwaysListening.collectAsState()
+            LaunchedEffect(Unit) {
+                viewModelRef = vm
+            }
+
+            val darkTheme by vm.isDarkTheme.collectAsState()
+            val appName by vm.appName.collectAsState()
+            val isAlwaysListening by vm.isAlwaysListening.collectAsState()
 
             LaunchedEffect(isAlwaysListening) {
                 if (isAlwaysListening) {
                     VoiceAssistantService.startService(this@MainActivity)
-                } else {
-                    VoiceAssistantService.stopService(this@MainActivity)
                 }
             }
 
+            LaunchedEffect(Unit) {
+                loadInstalledApps(vm)
+            }
+
             RevolutionTheme(darkTheme = darkTheme) {
-                RevolutionApp(viewModel = viewModel, appName = appName)
+                RevolutionApp(viewModel = vm, appName = appName)
             }
         }
     }
@@ -81,24 +90,51 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun loadInstalledApps(vm: MainViewModel) {
+        val pm = packageManager
+        val apps = pm.getInstalledApplications(0)
+            .filter { app ->
+                pm.getLaunchIntentForPackage(app.packageName) != null &&
+                        app.packageName != packageName
+            }
+            .sortedBy { pm.getApplicationLabel(it).toString().lowercase() }
+
+        val currentPerms = vm.appPermissions.value.associateBy { it.packageName }
+
+        apps.forEach { app ->
+            if (!currentPerms.containsKey(app.packageName)) {
+                val label = pm.getApplicationLabel(app).toString()
+                vm.insertAppPermission(
+                    AppPermissionEntry(
+                        packageName = app.packageName,
+                        appName = label,
+                        isAllowed = true
+                    )
+                )
+            }
+        }
+    }
+
     private fun registerServiceReceiver() {
         serviceReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 intent ?: return
+                val vm = viewModelRef ?: return
                 when (intent.action) {
                     VoiceAssistantService.ACTION_STATE_CHANGED -> {
                         val stateName = intent.getStringExtra(VoiceAssistantService.EXTRA_STATE)
-                        val spokenText = intent.getStringExtra(VoiceAssistantService.EXTRA_SPOKEN_TEXT)
                         stateName?.let {
                             try {
-                                val state = com.revolution.ai.data.model.AssistantState.valueOf(it)
-                                // State updates are received; ViewModel observes via service broadcasts
+                                val state = AssistantState.valueOf(it)
+                                vm.setAssistantState(state)
                             } catch (_: IllegalArgumentException) { }
                         }
                     }
                     VoiceAssistantService.ACTION_RESPONSE -> {
                         val message = intent.getStringExtra(VoiceAssistantService.EXTRA_MESSAGE)
-                        // Response messages are received from the service
+                        if (!message.isNullOrBlank()) {
+                            vm.setLastResponse(message)
+                        }
                     }
                 }
             }
@@ -157,20 +193,20 @@ private fun RevolutionApp(viewModel: MainViewModel, appName: String) {
             NavDestination(
                 route = "logs",
                 label = "Logs",
-                selectedIcon = { Icon(Icons.Filled.List, contentDescription = "Logs") },
-                unselectedIcon = { Icon(Icons.Outlined.List, contentDescription = "Logs") }
+                selectedIcon = { Icon(Icons.Filled.Assessment, contentDescription = "Logs") },
+                unselectedIcon = { Icon(Icons.Outlined.Assessment, contentDescription = "Logs") }
             ),
             NavDestination(
                 route = "permissions",
-                label = "Permissions",
-                selectedIcon = { Icon(Icons.Filled.Security, contentDescription = "Permissions") },
-                unselectedIcon = { Icon(Icons.Outlined.Security, contentDescription = "Permissions") }
+                label = "Apps",
+                selectedIcon = { Icon(Icons.Filled.Security, contentDescription = "Apps") },
+                unselectedIcon = { Icon(Icons.Outlined.Security, contentDescription = "Apps") }
             ),
             NavDestination(
                 route = "guide",
                 label = "Guide",
-                selectedIcon = { Icon(Icons.Filled.MenuBook, contentDescription = "Guide") },
-                unselectedIcon = { Icon(Icons.Outlined.MenuBook, contentDescription = "Guide") }
+                selectedIcon = { Icon(Icons.Filled.Help, contentDescription = "Guide") },
+                unselectedIcon = { Icon(Icons.Outlined.Help, contentDescription = "Guide") }
             )
         )
     }
@@ -231,28 +267,16 @@ private fun RevolutionApp(viewModel: MainViewModel, appName: String) {
                 .fillMaxSize()
                 .padding(innerPadding),
             enterTransition = {
-                fadeIn(animationSpec = tween(300)) + slideInHorizontally(
-                    initialOffsetX = { it / 4 },
-                    animationSpec = tween(300)
-                )
+                fadeIn(animationSpec = tween(250))
             },
             exitTransition = {
-                fadeOut(animationSpec = tween(300)) + slideOutHorizontally(
-                    targetOffsetX = { -it / 4 },
-                    animationSpec = tween(300)
-                )
+                fadeOut(animationSpec = tween(250))
             },
             popEnterTransition = {
-                fadeIn(animationSpec = tween(300)) + slideInHorizontally(
-                    initialOffsetX = { -it / 4 },
-                    animationSpec = tween(300)
-                )
+                fadeIn(animationSpec = tween(250))
             },
             popExitTransition = {
-                fadeOut(animationSpec = tween(300)) + slideOutHorizontally(
-                    targetOffsetX = { it / 4 },
-                    animationSpec = tween(300)
-                )
+                fadeOut(animationSpec = tween(250))
             }
         ) {
             composable("home") {

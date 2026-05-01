@@ -75,42 +75,40 @@ fun LogsScreen(viewModel: MainViewModel) {
         )
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Action Logs",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                actions = {
-                    IconButton(onClick = { /* Export logs */ }) {
-                        Icon(
-                            Icons.Outlined.FileDownload,
-                            contentDescription = "Export logs"
-                        )
-                    }
-                    IconButton(onClick = { showDeleteDialog = true }) {
-                        Icon(
-                            Icons.Outlined.DeleteSweep,
-                            contentDescription = "Delete old logs",
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground
-                )
-            )
-        }
-    ) { padding ->
-        Column(
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            Text(
+                "Action Logs",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Row {
+                IconButton(onClick = { viewModel.exportLogsToEmail() }) {
+                    Icon(
+                        Icons.Outlined.FileDownload,
+                        contentDescription = "Export logs"
+                    )
+                }
+                IconButton(onClick = { showDeleteDialog = true }) {
+                    Icon(
+                        Icons.Outlined.DeleteSweep,
+                        contentDescription = "Delete old logs",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        }
+
+        run {
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(horizontal = 16.dp),

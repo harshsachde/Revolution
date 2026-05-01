@@ -140,7 +140,7 @@ class VoiceAssistantService : Service(), TextToSpeech.OnInitListener {
         if (status == TextToSpeech.SUCCESS) {
             val result = tts?.setLanguage(Locale.US)
             ttsReady = result != TextToSpeech.LANG_MISSING_DATA &&
-                    result != TextToSpeech.LANG_NOT_AVAILABLE
+                    result != TextToSpeech.LANG_NOT_SUPPORTED
             tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                 override fun onStart(utteranceId: String?) {
                     updateState(AssistantState.SPEAKING)

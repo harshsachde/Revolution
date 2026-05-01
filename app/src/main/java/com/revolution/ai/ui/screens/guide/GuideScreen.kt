@@ -194,7 +194,7 @@ private fun ExpandableGuideSection(section: GuideSection) {
                         bottom = 16.dp
                     )
                 ) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    Divider(color = MaterialTheme.colorScheme.outlineVariant)
                     Spacer(modifier = Modifier.height(12.dp))
 
                     section.items.forEachIndexed { index, item ->

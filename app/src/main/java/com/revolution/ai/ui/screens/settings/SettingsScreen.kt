@@ -285,7 +285,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         }
                     )
 
-                    HorizontalDivider(
+                    Divider(
                         modifier = Modifier.padding(vertical = 4.dp),
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
@@ -300,7 +300,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         }
                     )
 
-                    HorizontalDivider(
+                    Divider(
                         modifier = Modifier.padding(vertical = 4.dp),
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
@@ -343,7 +343,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         }
                     )
 
-                    HorizontalDivider(
+                    Divider(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
@@ -358,7 +358,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         }
                     )
 
-                    HorizontalDivider(
+                    Divider(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
@@ -373,7 +373,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         }
                     )
 
-                    HorizontalDivider(
+                    Divider(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
@@ -388,7 +388,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         }
                     )
 
-                    HorizontalDivider(
+                    Divider(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
@@ -403,7 +403,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         }
                     )
 
-                    HorizontalDivider(
+                    Divider(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         color = MaterialTheme.colorScheme.outlineVariant
                     )

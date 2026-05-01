@@ -290,7 +290,7 @@ private fun LogItem(log: ActionLog) {
                 exit = fadeOut() + shrinkVertically()
             ) {
                 Column(modifier = Modifier.padding(top = 12.dp)) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    Divider(color = MaterialTheme.colorScheme.outlineVariant)
 
                     Spacer(modifier = Modifier.height(12.dp))
 
